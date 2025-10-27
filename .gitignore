@@ -1,0 +1,80 @@
+# Root-level .gitignore
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDEs and editors
+.idea/
+.vscode/
+*.iml
+
+# Build output
+/build/
+/dist/
+/target/
+
+# Node modules
+node_modules/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Dependency directories
+**/node_modules/
+**/build/
+**/dist/
+**/target/
+
+# Spring Boot specific
+*.class
+*.jar
+*.war
+*.ear
+*.db
+*.h2.db
+*.mv.db
+*.log
+*.pid
+*.gz
+*.out
+
+# Maven
+.mvn/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+
+# Gradle
+.gradle/
+build/
+!gradle-wrapper.jar
+
+# React specific
+*.cache
+.cache/
+*.eslintcache
+
+# Coverage reports
+coverage/
+*.lcov
+
+# Testing
+jest-test-results.json
+
+# IntelliJ
+out/
+
+# Mac system files
+*.DS_Store

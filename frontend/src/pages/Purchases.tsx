@@ -84,35 +84,44 @@ export const Purchases: React.FC = () => {
     }
   };
 
-  const calculateTotalCost = (medicineId: string, quantity: string) => {
-    if (medicineId && quantity) {
-      const medicine = medicines.find(m => m.medicineId.toString() === medicineId);
-      if (medicine) {
-        const total = medicine.costPrice * parseInt(quantity);
-        setFormData({ ...formData, totalCost: total.toString() });
-      }
-    }
-  };
-
   const handleMedicineChange = (value: string) => {
-    setFormData({ ...formData, medicineId: value });
-    calculateTotalCost(value, formData.quantity);
+    const medicine = medicines.find(m => m.medicineId.toString() === value);
+    let totalCost = formData.totalCost;
+    
+    if (medicine && formData.quantity) {
+      const total = medicine.costPrice * parseInt(formData.quantity);
+      totalCost = total.toString();
+    }
+    
+    setFormData({ ...formData, medicineId: value, totalCost });
   };
 
   const handleQuantityChange = (value: string) => {
-    setFormData({ ...formData, quantity: value });
-    calculateTotalCost(formData.medicineId, value);
+    const medicine = medicines.find(m => m.medicineId.toString() === formData.medicineId);
+    let totalCost = formData.totalCost;
+    
+    if (medicine && value) {
+      const total = medicine.costPrice * parseInt(value);
+      totalCost = total.toString();
+    }
+    
+    setFormData({ ...formData, quantity: value, totalCost });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      // Convert date to ISO datetime format (backend expects LocalDateTime)
+      const purchaseDate = formData.purchaseDate 
+        ? new Date(formData.purchaseDate + 'T00:00:00').toISOString()
+        : new Date().toISOString();
+      
       const purchaseData = {
         medicineId: parseInt(formData.medicineId),
         supplierId: parseInt(formData.supplierId),
         quantity: parseInt(formData.quantity),
         totalCost: parseFloat(formData.totalCost),
-        purchaseDate: formData.purchaseDate || new Date().toISOString().split('T')[0],
+        purchaseDate: purchaseDate,
       };
 
       await purchaseAPI.create(purchaseData);
@@ -173,36 +182,32 @@ export const Purchases: React.FC = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="medicineId">Medicine</Label>
-                <Select value={formData.medicineId} onValueChange={handleMedicineChange}>
+                <Select value={formData.medicineId} onValueChange={handleMedicineChange} disabled={!medicines || medicines.length === 0}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select medicine" />
+                    <SelectValue placeholder={medicines && medicines.length > 0 ? "Select medicine" : "No medicines available"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {medicines && medicines.length > 0 ? (
-                      medicines.map((medicine) => (
-                        <SelectItem key={medicine.medicineId} value={medicine.medicineId.toString()}>
-                          {medicine.name} - ${medicine.costPrice}
-                        </SelectItem>
-                      ))
-                    ) : null}
+                    {medicines && medicines.length > 0 && medicines.map((medicine) => (
+                      <SelectItem key={medicine.medicineId} value={medicine.medicineId.toString()}>
+                        {medicine.name} - ${medicine.costPrice}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="supplierId">Supplier</Label>
-                <Select value={formData.supplierId} onValueChange={(value) => setFormData({ ...formData, supplierId: value })}>
+                <Select value={formData.supplierId} onValueChange={(value) => setFormData({ ...formData, supplierId: value })} disabled={!suppliers || suppliers.length === 0}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select supplier" />
+                    <SelectValue placeholder={suppliers && suppliers.length > 0 ? "Select supplier" : "No suppliers available"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {suppliers && suppliers.length > 0 ? (
-                      suppliers.map((supplier) => (
-                        <SelectItem key={supplier.supplierId} value={supplier.supplierId.toString()}>
-                          {supplier.name}
-                        </SelectItem>
-                      ))
-                    ) : null}
+                    {suppliers && suppliers.length > 0 && suppliers.map((supplier) => (
+                      <SelectItem key={supplier.supplierId} value={supplier.supplierId.toString()}>
+                        {supplier.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

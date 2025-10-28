@@ -76,26 +76,30 @@ export const Sales: React.FC = () => {
     }
   };
 
-  const calculateTotal = (medicineId: string, quantity: string) => {
-    if (medicineId && quantity) {
-      const medicine = medicines.find(m => m.medicineId.toString() === medicineId);
-      if (medicine) {
-        const total = medicine.sellingPrice * parseInt(quantity);
-        setTotalAmount(total);
-      }
+  const handleMedicineChange = (value: string) => {
+    const medicine = medicines.find(m => m.medicineId.toString() === value);
+    
+    if (medicine && formData.quantity) {
+      const total = medicine.sellingPrice * parseInt(formData.quantity);
+      setTotalAmount(total);
     } else {
       setTotalAmount(0);
     }
-  };
-
-  const handleMedicineChange = (value: string) => {
+    
     setFormData({ ...formData, medicineId: value });
-    calculateTotal(value, formData.quantity);
   };
 
   const handleQuantityChange = (value: string) => {
+    const medicine = medicines.find(m => m.medicineId.toString() === formData.medicineId);
+    
+    if (medicine && value) {
+      const total = medicine.sellingPrice * parseInt(value);
+      setTotalAmount(total);
+    } else {
+      setTotalAmount(0);
+    }
+    
     setFormData({ ...formData, quantity: value });
-    calculateTotal(formData.medicineId, value);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -168,22 +172,20 @@ export const Sales: React.FC = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="medicineId">Medicine</Label>
-                <Select value={formData.medicineId} onValueChange={handleMedicineChange}>
+                <Select value={formData.medicineId} onValueChange={handleMedicineChange} disabled={!medicines || medicines.length === 0}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select medicine" />
+                    <SelectValue placeholder={medicines && medicines.length > 0 ? "Select medicine" : "No medicines available"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {medicines && medicines.length > 0 ? (
-                      medicines.map((medicine) => (
-                        <SelectItem 
-                          key={medicine.medicineId} 
-                          value={medicine.medicineId.toString()}
-                          disabled={medicine.quantity === 0}
-                        >
-                          {medicine.name} - ${medicine.sellingPrice} (Stock: {medicine.quantity})
-                        </SelectItem>
-                      ))
-                    ) : null}
+                    {medicines && medicines.length > 0 && medicines.map((medicine) => (
+                      <SelectItem 
+                        key={medicine.medicineId} 
+                        value={medicine.medicineId.toString()}
+                        disabled={medicine.quantity === 0}
+                      >
+                        {medicine.name} - ${medicine.sellingPrice} (Stock: {medicine.quantity})
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

@@ -278,18 +278,16 @@ export const Medicines: React.FC = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="supplierId">Supplier</Label>
-                  <Select value={formData.supplierId} onValueChange={(value) => setFormData({ ...formData, supplierId: value })}>
+                  <Select value={formData.supplierId} onValueChange={(value) => setFormData({ ...formData, supplierId: value })} disabled={!suppliers || suppliers.length === 0}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select supplier" />
+                      <SelectValue placeholder={suppliers && suppliers.length > 0 ? "Select supplier" : "No suppliers available"} />
                     </SelectTrigger>
                     <SelectContent>
-                      {suppliers && suppliers.length > 0 ? (
-                        suppliers.map((supplier) => (
-                          <SelectItem key={supplier.supplierId} value={supplier.supplierId.toString()}>
-                            {supplier.name}
-                          </SelectItem>
-                        ))
-                      ) : null}
+                      {suppliers && suppliers.length > 0 && suppliers.map((supplier) => (
+                        <SelectItem key={supplier.supplierId} value={supplier.supplierId.toString()}>
+                          {supplier.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>

@@ -1,33 +1,33 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger 
-} from '@/components/ui/dialog';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
-import { 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Phone,
-  Mail
-} from 'lucide-react';
-import { supplierAPI } from '@/services/api';
-import { toast } from 'sonner';
+import React, { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Plus, Edit, Trash2, Phone, Mail } from "lucide-react";
+import { supplierAPI } from "@/services/api";
+import { toast } from "sonner";
 
 interface Supplier {
   supplierId: number;
@@ -42,9 +42,9 @@ export const Suppliers: React.FC = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
   const [formData, setFormData] = useState({
-    name: '',
-    contact: '',
-    email: '',
+    name: "",
+    contact: "",
+    email: "",
   });
 
   useEffect(() => {
@@ -55,10 +55,11 @@ export const Suppliers: React.FC = () => {
     try {
       const response = await supplierAPI.getAll();
       const data = Array.isArray(response.data) ? response.data : [];
+      console.log("Fetched suppliers ", data);
       setSuppliers(data);
     } catch (error) {
-      console.error('Failed to fetch suppliers:', error);
-      toast.error('Failed to fetch suppliers');
+      console.error("Failed to fetch suppliers:", error);
+      toast.error("Failed to fetch suppliers");
       setSuppliers([]);
     } finally {
       setIsLoading(false);
@@ -70,17 +71,17 @@ export const Suppliers: React.FC = () => {
     try {
       if (editingSupplier) {
         await supplierAPI.update(editingSupplier.supplierId, formData);
-        toast.success('Supplier updated successfully');
+        toast.success("Supplier updated successfully");
       } else {
         await supplierAPI.create(formData);
-        toast.success('Supplier added successfully');
+        toast.success("Supplier added successfully");
       }
 
       setIsDialogOpen(false);
       resetForm();
       fetchSuppliers();
     } catch (error) {
-      toast.error('Failed to save supplier');
+      toast.error("Failed to save supplier");
     }
   };
 
@@ -95,22 +96,22 @@ export const Suppliers: React.FC = () => {
   };
 
   const handleDelete = async (id: number) => {
-    if (confirm('Are you sure you want to delete this supplier?')) {
+    if (confirm("Are you sure you want to delete this supplier?")) {
       try {
         await supplierAPI.delete(id);
-        toast.success('Supplier deleted successfully');
+        toast.success("Supplier deleted successfully");
         fetchSuppliers();
       } catch (error) {
-        toast.error('Failed to delete supplier');
+        toast.error("Failed to delete supplier");
       }
     }
   };
 
   const resetForm = () => {
     setFormData({
-      name: '',
-      contact: '',
-      email: '',
+      name: "",
+      contact: "",
+      email: "",
     });
     setEditingSupplier(null);
   };
@@ -128,9 +129,11 @@ export const Suppliers: React.FC = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Suppliers</h1>
-          <p className="text-muted-foreground">Manage your medicine suppliers</p>
+          <p className="text-muted-foreground">
+            Manage your medicine suppliers
+          </p>
         </div>
-        
+
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={resetForm}>
@@ -141,10 +144,12 @@ export const Suppliers: React.FC = () => {
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>
-                {editingSupplier ? 'Edit Supplier' : 'Add New Supplier'}
+                {editingSupplier ? "Edit Supplier" : "Add New Supplier"}
               </DialogTitle>
               <DialogDescription>
-                {editingSupplier ? 'Update the supplier details.' : 'Add a new supplier to your system.'}
+                {editingSupplier
+                  ? "Update the supplier details."
+                  : "Add a new supplier to your system."}
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -153,40 +158,50 @@ export const Suppliers: React.FC = () => {
                 <Input
                   id="name"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
                   placeholder="Enter supplier name"
                   required
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="contact">Contact Number</Label>
                 <Input
                   id="contact"
                   value={formData.contact}
-                  onChange={(e) => setFormData({ ...formData, contact: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, contact: e.target.value })
+                  }
                   placeholder="Enter contact number"
                   required
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address</Label>
                 <Input
                   id="email"
                   type="email"
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
                   placeholder="Enter email address"
                 />
               </div>
-              
+
               <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsDialogOpen(false)}
+                >
                   Cancel
                 </Button>
                 <Button type="submit">
-                  {editingSupplier ? 'Update' : 'Add'} Supplier
+                  {editingSupplier ? "Update" : "Add"} Supplier
                 </Button>
               </div>
             </form>
@@ -215,7 +230,9 @@ export const Suppliers: React.FC = () => {
               {suppliers && suppliers.length > 0 ? (
                 suppliers.map((supplier) => (
                   <TableRow key={supplier.supplierId}>
-                    <TableCell className="font-medium">{supplier.name}</TableCell>
+                    <TableCell className="font-medium">
+                      {supplier.name}
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-2">
                         <Phone className="h-4 w-4 text-muted-foreground" />
@@ -225,7 +242,7 @@ export const Suppliers: React.FC = () => {
                     <TableCell>
                       <div className="flex items-center space-x-2">
                         <Mail className="h-4 w-4 text-muted-foreground" />
-                        <span>{supplier.email || 'N/A'}</span>
+                        <span>{supplier.email || "N/A"}</span>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -250,7 +267,10 @@ export const Suppliers: React.FC = () => {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center text-muted-foreground">
+                  <TableCell
+                    colSpan={4}
+                    className="text-center text-muted-foreground"
+                  >
                     No suppliers found
                   </TableCell>
                 </TableRow>

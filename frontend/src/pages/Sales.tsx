@@ -33,27 +33,10 @@ import {
 } from 'lucide-react';
 import { saleAPI, medicineAPI } from '@/services/api';
 import { toast } from 'sonner';
-
-interface Sale {
-  saleId: number;
-  medicineName: string;
-  quantity: number;
-  totalAmount: number;
-  profit: number;
-  saleDate: string;
-  userName: string;
-}
-
-interface Medicine {
-  medicineId: number;
-  name: string;
-  category: string;
-  sellingPrice: number;
-  quantity: number;
-}
+import type { SaleResponse, Medicine } from '@/types';
 
 export const Sales: React.FC = () => {
-  const [sales, setSales] = useState<Sale[]>([]);
+  const [sales, setSales] = useState<SaleResponse[]>([]);
   const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);

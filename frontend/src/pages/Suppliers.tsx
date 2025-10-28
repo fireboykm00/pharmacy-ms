@@ -54,9 +54,12 @@ export const Suppliers: React.FC = () => {
   const fetchSuppliers = async () => {
     try {
       const response = await supplierAPI.getAll();
-      setSuppliers(response.data);
+      const data = Array.isArray(response.data) ? response.data : [];
+      setSuppliers(data);
     } catch (error) {
+      console.error('Failed to fetch suppliers:', error);
       toast.error('Failed to fetch suppliers');
+      setSuppliers([]);
     } finally {
       setIsLoading(false);
     }

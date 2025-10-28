@@ -12,8 +12,14 @@ import { Reports } from '@/pages/Reports';
 import { Users } from '@/pages/Users';
 import { Unauthorized } from '@/pages/Unauthorized';
 import { Toaster } from 'sonner';
+import { cleanupInvalidStorage } from '@/utils/storageCleanup';
+
+// Clean up any invalid localStorage entries on app load
+cleanupInvalidStorage();
 
 function App() {
+  console.log('App initialized');
+  
   return (
     <Router>
       <AuthProvider>

@@ -36,13 +36,7 @@ import {
 } from 'lucide-react';
 import { userAPI } from '@/services/api';
 import { toast } from 'sonner';
-
-interface User {
-  userId: number;
-  name: string;
-  email: string;
-  role: string;
-}
+import type { User } from '@/types';
 
 export const Users: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -63,9 +57,12 @@ export const Users: React.FC = () => {
   const fetchUsers = async () => {
     try {
       const response = await userAPI.getAll();
-      setUsers(response.data);
+      const data = Array.isArray(response.data) ? response.data : [];
+      setUsers(data);
     } catch (error) {
+      console.error('Failed to fetch users:', error);
       toast.error('Failed to fetch users');
+      setUsers([]);
     } finally {
       setIsLoading(false);
     }
@@ -75,15 +72,24 @@ export const Users: React.FC = () => {
     e.preventDefault();
     try {
       if (editingUser) {
-        const updateData = {
+        const updateData: User = {
+          userId: editingUser.userId,
           name: formData.name,
-          role: formData.role,
+          email: editingUser.email, // Keep existing email
+          role: formData.role as 'ADMIN' | 'PHARMACIST' | 'CASHIER',
           ...(formData.password && { password: formData.password }),
         };
         await userAPI.update(editingUser.userId, updateData);
         toast.success('User updated successfully');
       } else {
-        await userAPI.create(formData);
+        const newUser: User = {
+          userId: 0, // Will be set by backend
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+          role: formData.role as 'ADMIN' | 'PHARMACIST' | 'CASHIER',
+        };
+        await userAPI.create(newUser);
         toast.success('User created successfully');
       }
 

@@ -23,31 +23,10 @@ import {
 } from 'lucide-react';
 import { reportAPI, saleAPI } from '@/services/api';
 import { toast } from 'sonner';
-
-interface StockReport {
-  medicineId: number;
-  name: string;
-  category: string;
-  quantity: number;
-  reorderLevel: number;
-  costPrice: number;
-  sellingPrice: number;
-  status: 'LOW' | 'NORMAL' | 'OUT_OF_STOCK';
-}
-
-interface ExpiryReport {
-  medicineId: number;
-  name: string;
-  expiryDate: string;
-}
-
-interface SalesSummary {
-  totalRevenue: number;
-  totalProfit: number;
-}
+import type { StockReportDTO, ExpiryReport, SalesSummary } from '@/types';
 
 export const Reports: React.FC = () => {
-  const [stockReport, setStockReport] = useState<StockReport[]>([]);
+  const [stockReport, setStockReport] = useState<StockReportDTO[]>([]);
   const [expiryReport, setExpiryReport] = useState<ExpiryReport[]>([]);
   const [expiringReport, setExpiringReport] = useState<ExpiryReport[]>([]);
   const [salesSummary, setSalesSummary] = useState<SalesSummary>({

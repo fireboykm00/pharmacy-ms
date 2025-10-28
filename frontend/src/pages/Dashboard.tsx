@@ -15,15 +15,7 @@ import {
 import { reportAPI, saleAPI } from '@/services/api';
 import { showErrorToast, showSuccessToast } from '@/utils/errorHandler';
 import { Link } from 'react-router-dom';
-
-interface DashboardStats {
-  totalMedicines: number;
-  lowStockItems: number;
-  expiredItems: number;
-  todaySales: number;
-  monthlyRevenue: number;
-  monthlyProfit: number;
-}
+import type { DashboardStats, StockReportDTO, ExpiryReport, SaleResponse, SalesSummary } from '@/types';
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
@@ -45,58 +37,54 @@ export const Dashboard: React.FC = () => {
       const todayISO = today.toISOString();
       const monthStartISO = new Date(today.getFullYear(), today.getMonth(), 1).toISOString();
       
-      // Prepare API calls based on user role
-      const apiCalls = [
+      // Fetch base data first
+      const [stockResponse, expiryResponse] = await Promise.all([
         reportAPI.getStock(),
         reportAPI.getExpiry(),
-      ];
+      ]);
+      
+      const stockData: StockReportDTO[] = Array.isArray(stockResponse.data) ? stockResponse.data : [];
+      const expiredData: ExpiryReport[] = Array.isArray(expiryResponse.data) ? expiryResponse.data : [];
+      
+      let todaySales: SaleResponse[] = [];
+      let monthlySummary: SalesSummary = { totalRevenue: 0, totalProfit: 0 };
 
       // Only add sales data for users with appropriate roles
       if (user?.role === 'ADMIN' || user?.role === 'PHARMACIST') {
-        apiCalls.push(
+        const [salesResponse, summaryResponse] = await Promise.all([
           saleAPI.getByDateRange(monthStartISO, todayISO),
           saleAPI.getSummary(monthStartISO, todayISO)
-        );
+        ]);
+        todaySales = Array.isArray(salesResponse.data) ? salesResponse.data : [];
+        monthlySummary = summaryResponse.data && typeof summaryResponse.data === 'object' 
+          ? summaryResponse.data 
+          : { totalRevenue: 0, totalProfit: 0 };
       } else {
         // For CASHIER role, get all sales and filter locally
-        apiCalls.push(saleAPI.getAll());
-      }
-
-      const results = await Promise.all(apiCalls);
-      
-      const stockData = results[0]?.data || [];
-      const expiredData = results[1]?.data || [];
-      
-      let todaySales = [];
-      let monthlySummary = { totalRevenue: 0, totalProfit: 0 };
-
-      if (user?.role === 'ADMIN' || user?.role === 'PHARMACIST') {
-        todaySales = results[2]?.data || [];
-        monthlySummary = results[3]?.data || {};
-      } else {
-        // For CASHIER, filter all sales to get today's and monthly data
-        const allSales = results[2]?.data || [];
-        todaySales = allSales.filter((sale: any) => {
+        const salesResponse = await saleAPI.getAll();
+        const allSales: SaleResponse[] = Array.isArray(salesResponse.data) ? salesResponse.data : [];
+        
+        todaySales = allSales.filter((sale: SaleResponse) => {
           const saleDate = new Date(sale.saleDate);
           return saleDate.toDateString() === today.toDateString();
         });
         
         // Calculate monthly totals for CASHIER
-        const monthlySales = allSales.filter((sale: any) => {
+        const monthlySales = allSales.filter((sale: SaleResponse) => {
           const saleDate = new Date(sale.saleDate);
           return saleDate.getMonth() === today.getMonth() && 
                  saleDate.getFullYear() === today.getFullYear();
         });
         
         monthlySummary = {
-          totalRevenue: monthlySales.reduce((sum: number, sale: any) => sum + (sale.totalAmount || 0), 0),
-          totalProfit: monthlySales.reduce((sum: number, sale: any) => sum + (sale.profit || 0), 0),
+          totalRevenue: monthlySales.reduce((sum: number, sale: SaleResponse) => sum + (sale.totalAmount || 0), 0),
+          totalProfit: monthlySales.reduce((sum: number, sale: SaleResponse) => sum + (sale.profit || 0), 0),
         };
       }
 
       setStats({
         totalMedicines: stockData.length,
-        lowStockItems: stockData.filter((item: any) => 
+        lowStockItems: stockData.filter((item: StockReportDTO) => 
           item.status === 'LOW' || item.status === 'OUT_OF_STOCK'
         ).length,
         expiredItems: expiredData.length,

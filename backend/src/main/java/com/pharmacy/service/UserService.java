@@ -29,7 +29,7 @@ public class UserService {
         
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole().toString());
         
-        return new LoginResponse(token, user.getEmail(), user.getName(), user.getRole().toString());
+        return new LoginResponse(token, user.getUserId(), user.getEmail(), user.getName(), user.getRole().toString());
     }
     
     public User registerUser(User user) {

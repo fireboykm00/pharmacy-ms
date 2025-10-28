@@ -1,13 +1,13 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import type { ReactNode } from 'react';
-import { authAPI } from '@/services/api';
-import { showErrorToast, showSuccessToast } from '@/utils/errorHandler';
-
-interface User {
-  email: string;
-  name: string;
-  role: string;
-}
+import React, { createContext, useContext, useState, useEffect } from "react";
+import type { ReactNode } from "react";
+import { authAPI } from "@/services/api";
+import { showErrorToast, showSuccessToast } from "@/utils/errorHandler";
+import type { User, LoginResponse, BackendLoginResponse } from "@/types";
+import {
+  safeGetItem,
+  safeSetItem,
+  safeRemoveItem,
+} from "@/utils/storageCleanup";
 
 interface AuthContextType {
   user: User | null;
@@ -24,7 +24,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
@@ -42,38 +42,63 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   const isTokenExpired = () => {
-    const tokenTimestamp = localStorage.getItem('tokenTimestamp');
+    const tokenTimestamp = safeGetItem("tokenTimestamp");
     if (!tokenTimestamp) return true;
-    
+
     const now = Date.now();
     const storedTime = parseInt(tokenTimestamp);
-    return (now - storedTime) > TOKEN_EXPIRY_TIME;
+    return isNaN(storedTime) || now - storedTime > TOKEN_EXPIRY_TIME;
   };
 
   const clearAuthData = () => {
     setUser(null);
     setToken(null);
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('tokenTimestamp');
+    // Remove all possible auth-related localStorage keys using safe utility
+    const keysToRemove = ["token", "user", "tokenTimestamp"];
+    keysToRemove.forEach((key) => safeRemoveItem(key));
   };
 
   useEffect(() => {
     const initializeAuth = () => {
-      const storedToken = localStorage.getItem('token');
-      const storedUser = localStorage.getItem('user');
-      
-      if (storedToken && storedUser) {
-        // Check if token is expired
-        if (isTokenExpired()) {
-          clearAuthData();
-          showErrorToast({ response: { data: { message: 'Session expired. Please login again.' } } });
+      try {
+        const storedToken = safeGetItem("token");
+        const storedUser = safeGetItem("user");
+
+        // Validate stored values exist (safeGetItem already handles invalid values)
+        if (storedToken && storedUser) {
+          try {
+            const parsedUser = JSON.parse(storedUser);
+
+            // Check if token is expired
+            if (isTokenExpired()) {
+              console.log("Token expired, clearing auth data");
+              clearAuthData();
+            } else if (parsedUser && parsedUser.userId) {
+              // Validate parsed user has required fields
+              setToken(storedToken);
+              setUser(parsedUser);
+              console.log("Auth initialized from localStorage");
+            } else {
+              console.warn("Invalid user data in localStorage");
+              clearAuthData();
+            }
+          } catch (parseError) {
+            console.error("Error parsing stored user data:", parseError);
+            clearAuthData();
+          }
         } else {
-          setToken(storedToken);
-          setUser(JSON.parse(storedUser));
+          // Clear any invalid data silently
+          if (storedToken || storedUser) {
+            console.log("Clearing invalid localStorage data");
+            clearAuthData();
+          }
         }
+      } catch (error) {
+        console.error("Error during auth initialization:", error);
+        clearAuthData();
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
 
     initializeAuth();
@@ -81,20 +106,48 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (email: string, password: string) => {
     try {
+      console.log("Attempting login...");
       const response = await authAPI.login({ email, password });
-      const { token: newToken, email: userEmail, name, role } = response.data;
-      
-      const userData = { email: userEmail, name, role };
-      
-      setToken(newToken);
-      setUser(userData);
-      
-      localStorage.setItem('token', newToken);
-      localStorage.setItem('user', JSON.stringify(userData));
-      localStorage.setItem('tokenTimestamp', Date.now().toString());
-      
-      showSuccessToast('Login successful!');
+      const backendResponse: BackendLoginResponse = response.data;
+
+      console.log("Backend response:", backendResponse);
+
+      // Transform backend response to expected format
+      // Backend returns: { token, userId, email, name, role }
+      // Frontend expects: { token, user: { userId, email, name, role } }
+      const loginResponse: LoginResponse = {
+        token: backendResponse.token,
+        user: {
+          userId: backendResponse.userId,
+          email: backendResponse.email,
+          name: backendResponse.name,
+          role: backendResponse.role as "ADMIN" | "PHARMACIST" | "CASHIER",
+        },
+      };
+
+      if (
+        !loginResponse.token ||
+        !loginResponse.user ||
+        !loginResponse.user.userId
+      ) {
+        console.error("Invalid login response structure:", loginResponse);
+        throw new Error("Invalid login response from server");
+      }
+
+      // Set state first
+      setToken(loginResponse.token);
+      setUser(loginResponse.user);
+
+      // Then update localStorage using safe utilities
+      safeSetItem("token", loginResponse.token);
+      safeSetItem("user", JSON.stringify(loginResponse.user));
+      safeSetItem("tokenTimestamp", Date.now().toString());
+
+      console.log("Login successful, user:", loginResponse.user.email);
+      showSuccessToast("Login successful!");
     } catch (error: any) {
+      console.error("Login error:", error);
+      clearAuthData();
       showErrorToast(error);
       throw error;
     }
@@ -102,15 +155,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = () => {
     clearAuthData();
-    showSuccessToast('Logged out successfully');
+    showSuccessToast("Logged out successfully");
   };
 
   const refreshToken = async () => {
     // This would implement token refresh logic if backend supports it
     // For now, we'll just clear the session and redirect to login
     clearAuthData();
-    showErrorToast({ response: { data: { message: 'Session expired. Please login again.' } } });
-    window.location.href = '/login';
+    showErrorToast({
+      response: { data: { message: "Session expired. Please login again." } },
+    });
+    window.location.href = "/login";
   };
 
   // Auto-check token expiration every 5 minutes

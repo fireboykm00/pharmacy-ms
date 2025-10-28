@@ -35,26 +35,7 @@ import {
 } from 'lucide-react';
 import { medicineAPI, supplierAPI } from '@/services/api';
 import { toast } from 'sonner';
-
-interface Medicine {
-  medicineId: number;
-  name: string;
-  category: string;
-  costPrice: number;
-  sellingPrice: number;
-  quantity: number;
-  expiryDate: string;
-  reorderLevel: number;
-  supplierId: number;
-  supplierName: string;
-}
-
-interface Supplier {
-  supplierId: number;
-  name: string;
-  contact: string;
-  email: string;
-}
+import type { Medicine, Supplier } from '@/types';
 
 export const Medicines: React.FC = () => {
   const [medicines, setMedicines] = useState<Medicine[]>([]);
@@ -83,10 +64,21 @@ export const Medicines: React.FC = () => {
         medicineAPI.getAll(),
         supplierAPI.getAll(),
       ]);
-      setMedicines(medicinesRes.data);
-      setSuppliers(suppliersRes.data);
+      
+      // Ensure we always set arrays, even if response is malformed
+      const medicinesData = Array.isArray(medicinesRes.data) ? medicinesRes.data : [];
+      const suppliersData = Array.isArray(suppliersRes.data) ? suppliersRes.data : [];
+      
+      console.log('Fetched medicines:', medicinesData.length);
+      console.log('Fetched suppliers:', suppliersData.length);
+      
+      setMedicines(medicinesData);
+      setSuppliers(suppliersData);
     } catch (error) {
+      console.error('Failed to fetch data:', error);
       toast.error('Failed to fetch data');
+      setMedicines([]);
+      setSuppliers([]);
     } finally {
       setIsLoading(false);
     }
@@ -115,7 +107,7 @@ export const Medicines: React.FC = () => {
       setIsDialogOpen(false);
       resetForm();
       fetchData();
-    } catch (error) {
+    } catch {
       toast.error('Failed to save medicine');
     }
   };
@@ -141,7 +133,7 @@ export const Medicines: React.FC = () => {
         await medicineAPI.delete(id);
         toast.success('Medicine deleted successfully');
         fetchData();
-      } catch (error) {
+      } catch {
         toast.error('Failed to delete medicine');
       }
     }
@@ -291,11 +283,17 @@ export const Medicines: React.FC = () => {
                       <SelectValue placeholder="Select supplier" />
                     </SelectTrigger>
                     <SelectContent>
-                      {suppliers.map((supplier) => (
-                        <SelectItem key={supplier.supplierId} value={supplier.supplierId.toString()}>
-                          {supplier.name}
+                      {suppliers && suppliers.length > 0 ? (
+                        suppliers.map((supplier) => (
+                          <SelectItem key={supplier.supplierId} value={supplier.supplierId.toString()}>
+                            {supplier.name}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="" disabled>
+                          No suppliers available
                         </SelectItem>
-                      ))}
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -345,7 +343,7 @@ export const Medicines: React.FC = () => {
                   <TableRow key={medicine.medicineId}>
                     <TableCell className="font-medium">{medicine.name}</TableCell>
                     <TableCell>{medicine.category}</TableCell>
-                    <TableCell>{medicine.supplierName}</TableCell>
+                    <TableCell>{medicine.supplierName || 'N/A'}</TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-2">
                         <span>{medicine.quantity}</span>
@@ -365,7 +363,7 @@ export const Medicines: React.FC = () => {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={stockStatus.color as any}>
+                      <Badge variant={stockStatus.color as "default" | "secondary" | "destructive" | "outline"}>
                         {stockStatus.status}
                       </Badge>
                     </TableCell>

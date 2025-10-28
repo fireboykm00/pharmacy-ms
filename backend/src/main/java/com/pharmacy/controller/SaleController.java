@@ -41,18 +41,13 @@ public class SaleController {
             @RequestParam String startDate,
             @RequestParam String endDate) {
         try {
-            LocalDateTime start = LocalDateTime.parse(startDate);
-            LocalDateTime end = LocalDateTime.parse(endDate);
+            LocalDateTime start = parseDateTime(startDate);
+            LocalDateTime end = parseDateTime(endDate);
             return ResponseEntity.ok(saleService.getSalesByDateRange(start, end));
         } catch (Exception e) {
-            // Try parsing as date only if ISO parsing fails
-            try {
-                LocalDateTime start = java.time.LocalDate.parse(startDate).atStartOfDay();
-                LocalDateTime end = java.time.LocalDate.parse(endDate).atTime(23, 59, 59);
-                return ResponseEntity.ok(saleService.getSalesByDateRange(start, end));
-            } catch (Exception ex) {
-                return ResponseEntity.badRequest().build();
-            }
+            System.err.println("Error parsing dates: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest().build();
         }
     }
     
@@ -62,8 +57,8 @@ public class SaleController {
             @RequestParam String startDate,
             @RequestParam String endDate) {
         try {
-            LocalDateTime start = LocalDateTime.parse(startDate);
-            LocalDateTime end = LocalDateTime.parse(endDate);
+            LocalDateTime start = parseDateTime(startDate);
+            LocalDateTime end = parseDateTime(endDate);
             
             BigDecimal totalProfit = saleService.getTotalProfit(start, end);
             BigDecimal totalRevenue = saleService.getTotalRevenue(start, end);
@@ -74,22 +69,29 @@ public class SaleController {
             
             return ResponseEntity.ok(summary);
         } catch (Exception e) {
-            // Try parsing as date only if ISO parsing fails
-            try {
-                LocalDateTime start = java.time.LocalDate.parse(startDate).atStartOfDay();
-                LocalDateTime end = java.time.LocalDate.parse(endDate).atTime(23, 59, 59);
-                
-                BigDecimal totalProfit = saleService.getTotalProfit(start, end);
-                BigDecimal totalRevenue = saleService.getTotalRevenue(start, end);
-                
-                Map<String, BigDecimal> summary = new HashMap<>();
-                summary.put("totalProfit", totalProfit);
-                summary.put("totalRevenue", totalRevenue);
-                
-                return ResponseEntity.ok(summary);
-            } catch (Exception ex) {
-                return ResponseEntity.badRequest().build();
+            System.err.println("Error parsing dates: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest().build();
+        }
+    }
+    
+    private LocalDateTime parseDateTime(String dateTimeStr) {
+        try {
+            // Try parsing with different formats
+            if (dateTimeStr.contains("T") && dateTimeStr.contains("Z")) {
+                // Handle ISO format with Z timezone (UTC)
+                return java.time.ZonedDateTime.parse(dateTimeStr)
+                    .withZoneSameInstant(java.time.ZoneId.systemDefault())
+                    .toLocalDateTime();
+            } else if (dateTimeStr.contains("T")) {
+                // Handle ISO format without timezone
+                return LocalDateTime.parse(dateTimeStr);
+            } else {
+                // Handle date-only format
+                return java.time.LocalDate.parse(dateTimeStr).atStartOfDay();
             }
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to parse date: " + dateTimeStr, e);
         }
     }
 }

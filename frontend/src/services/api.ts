@@ -1,4 +1,21 @@
-import axios from 'axios';
+import axios, { type AxiosResponse } from 'axios';
+import type {
+  User,
+  LoginRequest,
+  LoginResponse,
+  BackendLoginResponse,
+  Medicine,
+  MedicineDTO,
+  Supplier,
+  SupplierDTO,
+  SaleResponse,
+  SaleRequest,
+  Purchase,
+  PurchaseDTO,
+  StockReportDTO,
+  ExpiryReport,
+  SalesSummary
+} from '@/types';
 
 const API_BASE_URL = 'http://localhost:8080/api';
 
@@ -67,55 +84,63 @@ api.interceptors.response.use(
 );
 
 export const authAPI = {
-  login: (credentials: { email: string; password: string }) =>
+  login: (credentials: LoginRequest): Promise<AxiosResponse<BackendLoginResponse>> => 
     api.post('/auth/login', credentials),
-  register: (userData: any) => api.post('/auth/register', userData),
+  register: (userData: User): Promise<AxiosResponse<User>> => 
+    api.post('/auth/register', userData),
 };
 
 export const userAPI = {
-  getAll: () => api.get('/users'),
-  getById: (id: number) => api.get(`/users/${id}`),
-  create: (userData: any) => api.post('/users', userData),
-  update: (id: number, userData: any) => api.put(`/users/${id}`, userData),
-  delete: (id: number) => api.delete(`/users/${id}`),
+  getAll: (): Promise<AxiosResponse<User[]>> => api.get('/users'),
+  getById: (id: number): Promise<AxiosResponse<User>> => api.get(`/users/${id}`),
+  create: (userData: User): Promise<AxiosResponse<User>> => api.post('/users', userData),
+  update: (id: number, userData: User): Promise<AxiosResponse<User>> => api.put(`/users/${id}`, userData),
+  delete: (id: number): Promise<AxiosResponse<void>> => api.delete(`/users/${id}`),
 };
 
 export const supplierAPI = {
-  getAll: () => api.get('/suppliers'),
-  getById: (id: number) => api.get(`/suppliers/${id}`),
-  create: (supplierData: any) => api.post('/suppliers', supplierData),
-  update: (id: number, supplierData: any) => api.put(`/suppliers/${id}`, supplierData),
-  delete: (id: number) => api.delete(`/suppliers/${id}`),
+  getAll: (): Promise<AxiosResponse<Supplier[]>> => api.get('/suppliers'),
+  getById: (id: number): Promise<AxiosResponse<Supplier>> => api.get(`/suppliers/${id}`),
+  create: (supplierData: SupplierDTO): Promise<AxiosResponse<Supplier>> => 
+    api.post('/suppliers', supplierData),
+  update: (id: number, supplierData: SupplierDTO): Promise<AxiosResponse<Supplier>> => 
+    api.put(`/suppliers/${id}`, supplierData),
+  delete: (id: number): Promise<AxiosResponse<void>> => api.delete(`/suppliers/${id}`),
 };
 
 export const medicineAPI = {
-  getAll: () => api.get('/medicines'),
-  getById: (id: number) => api.get(`/medicines/${id}`),
-  create: (medicineData: any) => api.post('/medicines', medicineData),
-  update: (id: number, medicineData: any) => api.put(`/medicines/${id}`, medicineData),
-  delete: (id: number) => api.delete(`/medicines/${id}`),
+  getAll: (): Promise<AxiosResponse<Medicine[]>> => api.get('/medicines'),
+  getById: (id: number): Promise<AxiosResponse<Medicine>> => api.get(`/medicines/${id}`),
+  create: (medicineData: MedicineDTO): Promise<AxiosResponse<Medicine>> => 
+    api.post('/medicines', medicineData),
+  update: (id: number, medicineData: MedicineDTO): Promise<AxiosResponse<Medicine>> => 
+    api.put(`/medicines/${id}`, medicineData),
+  delete: (id: number): Promise<AxiosResponse<void>> => api.delete(`/medicines/${id}`),
 };
 
 export const saleAPI = {
-  getAll: () => api.get('/sales'),
-  create: (saleData: any) => api.post('/sales', saleData),
-  getByDateRange: (startDate: string, endDate: string) =>
+  getAll: (): Promise<AxiosResponse<SaleResponse[]>> => api.get('/sales'),
+  create: (saleData: SaleRequest): Promise<AxiosResponse<SaleResponse>> => 
+    api.post('/sales', saleData),
+  getByDateRange: (startDate: string, endDate: string): Promise<AxiosResponse<SaleResponse[]>> =>
     api.get(`/sales/date-range?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`),
-  getSummary: (startDate: string, endDate: string) =>
+  getSummary: (startDate: string, endDate: string): Promise<AxiosResponse<SalesSummary>> =>
     api.get(`/sales/summary?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`),
 };
 
 export const purchaseAPI = {
-  getAll: () => api.get('/purchases'),
-  create: (purchaseData: any) => api.post('/purchases', purchaseData),
-  getByDateRange: (startDate: string, endDate: string) =>
+  getAll: (): Promise<AxiosResponse<Purchase[]>> => api.get('/purchases'),
+  create: (purchaseData: PurchaseDTO): Promise<AxiosResponse<Purchase>> => 
+    api.post('/purchases', purchaseData),
+  getByDateRange: (startDate: string, endDate: string): Promise<AxiosResponse<Purchase[]>> =>
     api.get(`/purchases/date-range?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`),
 };
 
 export const reportAPI = {
-  getStock: () => api.get('/reports/stock'),
-  getExpiry: () => api.get('/reports/expiry'),
-  getExpiring: (days: number = 30) => api.get(`/reports/expiring?days=${days}`),
+  getStock: (): Promise<AxiosResponse<StockReportDTO[]>> => api.get('/reports/stock'),
+  getExpiry: (): Promise<AxiosResponse<ExpiryReport[]>> => api.get('/reports/expiry'),
+  getExpiring: (days: number = 30): Promise<AxiosResponse<ExpiryReport[]>> => 
+    api.get(`/reports/expiring?days=${days}`),
 };
 
 export default api;

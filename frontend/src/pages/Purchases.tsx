@@ -33,27 +33,7 @@ import {
 } from 'lucide-react';
 import { purchaseAPI, medicineAPI, supplierAPI } from '@/services/api';
 import { toast } from 'sonner';
-
-interface Purchase {
-  purchaseId: number;
-  medicineName: string;
-  supplierName: string;
-  quantity: number;
-  totalCost: number;
-  purchaseDate: string;
-}
-
-interface Medicine {
-  medicineId: number;
-  name: string;
-  category: string;
-  costPrice: number;
-}
-
-interface Supplier {
-  supplierId: number;
-  name: string;
-}
+import type { Purchase, Medicine, Supplier } from '@/types';
 
 export const Purchases: React.FC = () => {
   const [purchases, setPurchases] = useState<Purchase[]>([]);

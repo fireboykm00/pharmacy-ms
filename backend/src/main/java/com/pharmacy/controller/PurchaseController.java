@@ -34,8 +34,36 @@ public class PurchaseController {
     @GetMapping("/date-range")
     @PreAuthorize("hasAnyRole('ADMIN', 'PHARMACIST')")
     public ResponseEntity<List<PurchaseDTO>> getPurchasesByDateRange(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
-        return ResponseEntity.ok(purchaseService.getPurchasesByDateRange(startDate, endDate));
+            @RequestParam String startDate,
+            @RequestParam String endDate) {
+        try {
+            LocalDateTime start = parseDateTime(startDate);
+            LocalDateTime end = parseDateTime(endDate);
+            return ResponseEntity.ok(purchaseService.getPurchasesByDateRange(start, end));
+        } catch (Exception e) {
+            System.err.println("Error parsing dates: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest().build();
+        }
+    }
+    
+    private LocalDateTime parseDateTime(String dateTimeStr) {
+        try {
+            // Try parsing with different formats
+            if (dateTimeStr.contains("T") && dateTimeStr.contains("Z")) {
+                // Handle ISO format with Z timezone (UTC)
+                return java.time.ZonedDateTime.parse(dateTimeStr)
+                    .withZoneSameInstant(java.time.ZoneId.systemDefault())
+                    .toLocalDateTime();
+            } else if (dateTimeStr.contains("T")) {
+                // Handle ISO format without timezone
+                return LocalDateTime.parse(dateTimeStr);
+            } else {
+                // Handle date-only format
+                return java.time.LocalDate.parse(dateTimeStr).atStartOfDay();
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to parse date: " + dateTimeStr, e);
+        }
     }
 }

@@ -51,12 +51,29 @@ export const Reports: React.FC = () => {
         ),
       ]);
 
-      setStockReport(stockRes.data);
-      setExpiryReport(expiryRes.data);
-      setExpiringReport(expiringRes.data);
-      setSalesSummary(salesRes.data);
+      // Ensure we always set arrays, even if response is malformed
+      const stockData = Array.isArray(stockRes.data) ? stockRes.data : [];
+      const expiryData = Array.isArray(expiryRes.data) ? expiryRes.data : [];
+      const expiringData = Array.isArray(expiringRes.data) ? expiringRes.data : [];
+      const salesData = salesRes.data && typeof salesRes.data === 'object' 
+        ? salesRes.data 
+        : { totalRevenue: 0, totalProfit: 0 };
+      
+      console.log('Fetched stock report:', stockData.length);
+      console.log('Fetched expiry report:', expiryData.length);
+      console.log('Fetched expiring report:', expiringData.length);
+
+      setStockReport(stockData);
+      setExpiryReport(expiryData);
+      setExpiringReport(expiringData);
+      setSalesSummary(salesData);
     } catch (error) {
+      console.error('Failed to fetch report data:', error);
       toast.error('Failed to fetch report data');
+      setStockReport([]);
+      setExpiryReport([]);
+      setExpiringReport([]);
+      setSalesSummary({ totalRevenue: 0, totalProfit: 0 });
     } finally {
       setIsLoading(false);
     }
@@ -195,7 +212,8 @@ export const Reports: React.FC = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {stockReport.map((item) => (
+                  {stockReport && stockReport.length > 0 ? (
+                    stockReport.map((item) => (
                     <TableRow key={item.medicineId}>
                       <TableCell className="font-medium">{item.name}</TableCell>
                       <TableCell>{item.category}</TableCell>
@@ -212,7 +230,14 @@ export const Reports: React.FC = () => {
                       <TableCell>${item.sellingPrice.toFixed(2)}</TableCell>
                       <TableCell>{getStatusBadge(item.status)}</TableCell>
                     </TableRow>
-                  ))}
+                  ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center text-muted-foreground">
+                        No stock data available
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </CardContent>
@@ -244,16 +269,24 @@ export const Reports: React.FC = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {expiryReport.map((item) => (
-                      <TableRow key={item.medicineId}>
-                        <TableCell className="font-medium">{item.name}</TableCell>
-                        <TableCell>{new Date(item.expiryDate).toLocaleDateString()}</TableCell>
-                        <TableCell>
-                          {Math.abs(getDaysUntilExpiry(item.expiryDate))} days
+                    {expiryReport && expiryReport.length > 0 ? (
+                      expiryReport.map((item) => (
+                        <TableRow key={item.medicineId}>
+                          <TableCell className="font-medium">{item.name}</TableCell>
+                          <TableCell>{new Date(item.expiryDate).toLocaleDateString()}</TableCell>
+                          <TableCell>
+                            {Math.abs(getDaysUntilExpiry(item.expiryDate))} days
+                          </TableCell>
+                          <TableCell>{getExpiryBadge(item.expiryDate)}</TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center text-muted-foreground">
+                          No expired medicines
                         </TableCell>
-                        <TableCell>{getExpiryBadge(item.expiryDate)}</TableCell>
                       </TableRow>
-                    ))}
+                    )}
                   </TableBody>
                 </Table>
               )}
@@ -270,7 +303,7 @@ export const Reports: React.FC = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {expiringReport.length === 0 ? (
+              {!expiringReport || expiringReport.length === 0 ? (
                 <div className="text-center py-8">
                   <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                   <p className="text-muted-foreground">No medicines expiring in the next 30 days</p>

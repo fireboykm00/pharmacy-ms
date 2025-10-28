@@ -289,11 +289,7 @@ export const Medicines: React.FC = () => {
                             {supplier.name}
                           </SelectItem>
                         ))
-                      ) : (
-                        <SelectItem value="" disabled>
-                          No suppliers available
-                        </SelectItem>
-                      )}
+                      ) : null}
                     </SelectContent>
                   </Select>
                 </div>
@@ -335,59 +331,67 @@ export const Medicines: React.FC = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {medicines.map((medicine) => {
-                const stockStatus = getStockStatus(medicine);
-                const expired = isExpired(medicine.expiryDate);
-                
-                return (
-                  <TableRow key={medicine.medicineId}>
-                    <TableCell className="font-medium">{medicine.name}</TableCell>
-                    <TableCell>{medicine.category}</TableCell>
-                    <TableCell>{medicine.supplierName || 'N/A'}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        <span>{medicine.quantity}</span>
-                        {medicine.quantity <= medicine.reorderLevel && (
-                          <AlertTriangle className="h-4 w-4 text-yellow-500" />
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>${medicine.costPrice.toFixed(2)}</TableCell>
-                    <TableCell>${medicine.sellingPrice.toFixed(2)}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        <span>{new Date(medicine.expiryDate).toLocaleDateString()}</span>
-                        {expired && (
-                          <Badge variant="destructive">Expired</Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={stockStatus.color as "default" | "secondary" | "destructive" | "outline"}>
-                        {stockStatus.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex space-x-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleEdit(medicine)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleDelete(medicine.medicineId)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+              {medicines && medicines.length > 0 ? (
+                medicines.map((medicine) => {
+                  const stockStatus = getStockStatus(medicine);
+                  const expired = isExpired(medicine.expiryDate);
+                  
+                  return (
+                    <TableRow key={medicine.medicineId}>
+                      <TableCell className="font-medium">{medicine.name}</TableCell>
+                      <TableCell>{medicine.category}</TableCell>
+                      <TableCell>{medicine.supplierName || 'N/A'}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          <span>{medicine.quantity}</span>
+                          {medicine.quantity <= medicine.reorderLevel && (
+                            <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>${medicine.costPrice.toFixed(2)}</TableCell>
+                      <TableCell>${medicine.sellingPrice.toFixed(2)}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          <span>{new Date(medicine.expiryDate).toLocaleDateString()}</span>
+                          {expired && (
+                            <Badge variant="destructive">Expired</Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={stockStatus.color as "default" | "secondary" | "destructive" | "outline"}>
+                          {stockStatus.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEdit(medicine)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDelete(medicine.medicineId)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={9} className="text-center text-muted-foreground">
+                    No medicines found
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>

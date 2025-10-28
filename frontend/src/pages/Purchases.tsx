@@ -60,11 +60,25 @@ export const Purchases: React.FC = () => {
         medicineAPI.getAll(),
         supplierAPI.getAll(),
       ]);
-      setPurchases(purchasesRes.data);
-      setMedicines(medicinesRes.data);
-      setSuppliers(suppliersRes.data);
+      
+      // Ensure we always set arrays, even if response is malformed
+      const purchasesData = Array.isArray(purchasesRes.data) ? purchasesRes.data : [];
+      const medicinesData = Array.isArray(medicinesRes.data) ? medicinesRes.data : [];
+      const suppliersData = Array.isArray(suppliersRes.data) ? suppliersRes.data : [];
+      
+      console.log('Fetched purchases:', purchasesData.length);
+      console.log('Fetched medicines:', medicinesData.length);
+      console.log('Fetched suppliers:', suppliersData.length);
+      
+      setPurchases(purchasesData);
+      setMedicines(medicinesData);
+      setSuppliers(suppliersData);
     } catch (error) {
+      console.error('Failed to fetch data:', error);
       toast.error('Failed to fetch data');
+      setPurchases([]);
+      setMedicines([]);
+      setSuppliers([]);
     } finally {
       setIsLoading(false);
     }
@@ -164,11 +178,13 @@ export const Purchases: React.FC = () => {
                     <SelectValue placeholder="Select medicine" />
                   </SelectTrigger>
                   <SelectContent>
-                    {medicines.map((medicine) => (
-                      <SelectItem key={medicine.medicineId} value={medicine.medicineId.toString()}>
-                        {medicine.name} - ${medicine.costPrice}
-                      </SelectItem>
-                    ))}
+                    {medicines && medicines.length > 0 ? (
+                      medicines.map((medicine) => (
+                        <SelectItem key={medicine.medicineId} value={medicine.medicineId.toString()}>
+                          {medicine.name} - ${medicine.costPrice}
+                        </SelectItem>
+                      ))
+                    ) : null}
                   </SelectContent>
                 </Select>
               </div>
@@ -180,11 +196,13 @@ export const Purchases: React.FC = () => {
                     <SelectValue placeholder="Select supplier" />
                   </SelectTrigger>
                   <SelectContent>
-                    {suppliers.map((supplier) => (
-                      <SelectItem key={supplier.supplierId} value={supplier.supplierId.toString()}>
-                        {supplier.name}
-                      </SelectItem>
-                    ))}
+                    {suppliers && suppliers.length > 0 ? (
+                      suppliers.map((supplier) => (
+                        <SelectItem key={supplier.supplierId} value={supplier.supplierId.toString()}>
+                          {supplier.name}
+                        </SelectItem>
+                      ))
+                    ) : null}
                   </SelectContent>
                 </Select>
               </div>
@@ -284,15 +302,23 @@ export const Purchases: React.FC = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {purchases.map((purchase) => (
-                <TableRow key={purchase.purchaseId}>
-                  <TableCell className="font-medium">{purchase.medicineName}</TableCell>
-                  <TableCell>{purchase.supplierName}</TableCell>
-                  <TableCell>{purchase.quantity}</TableCell>
-                  <TableCell>${purchase.totalCost.toFixed(2)}</TableCell>
-                  <TableCell>{new Date(purchase.purchaseDate).toLocaleDateString()}</TableCell>
+              {purchases && purchases.length > 0 ? (
+                purchases.map((purchase) => (
+                  <TableRow key={purchase.purchaseId}>
+                    <TableCell className="font-medium">{purchase.medicineName}</TableCell>
+                    <TableCell>{purchase.supplierName}</TableCell>
+                    <TableCell>{purchase.quantity}</TableCell>
+                    <TableCell>${purchase.totalCost.toFixed(2)}</TableCell>
+                    <TableCell>{new Date(purchase.purchaseDate).toLocaleDateString()}</TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center text-muted-foreground">
+                    No purchases found
+                  </TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </CardContent>

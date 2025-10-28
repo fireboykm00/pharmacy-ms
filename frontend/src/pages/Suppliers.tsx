@@ -212,41 +212,49 @@ export const Suppliers: React.FC = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {suppliers.map((supplier) => (
-                <TableRow key={supplier.supplierId}>
-                  <TableCell className="font-medium">{supplier.name}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <Phone className="h-4 w-4 text-muted-foreground" />
-                      <span>{supplier.contact}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <Mail className="h-4 w-4 text-muted-foreground" />
-                      <span>{supplier.email || 'N/A'}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleEdit(supplier)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDelete(supplier.supplierId)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+              {suppliers && suppliers.length > 0 ? (
+                suppliers.map((supplier) => (
+                  <TableRow key={supplier.supplierId}>
+                    <TableCell className="font-medium">{supplier.name}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center space-x-2">
+                        <Phone className="h-4 w-4 text-muted-foreground" />
+                        <span>{supplier.contact}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center space-x-2">
+                        <Mail className="h-4 w-4 text-muted-foreground" />
+                        <span>{supplier.email || 'N/A'}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex space-x-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleEdit(supplier)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDelete(supplier.supplierId)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center text-muted-foreground">
+                    No suppliers found
                   </TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </CardContent>

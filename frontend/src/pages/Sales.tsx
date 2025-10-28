@@ -56,10 +56,21 @@ export const Sales: React.FC = () => {
         saleAPI.getAll(),
         medicineAPI.getAll(),
       ]);
-      setSales(salesRes.data);
-      setMedicines(medicinesRes.data);
+      
+      // Ensure we always set arrays, even if response is malformed
+      const salesData = Array.isArray(salesRes.data) ? salesRes.data : [];
+      const medicinesData = Array.isArray(medicinesRes.data) ? medicinesRes.data : [];
+      
+      console.log('Fetched sales:', salesData.length);
+      console.log('Fetched medicines:', medicinesData.length);
+      
+      setSales(salesData);
+      setMedicines(medicinesData);
     } catch (error) {
+      console.error('Failed to fetch data:', error);
       toast.error('Failed to fetch data');
+      setSales([]);
+      setMedicines([]);
     } finally {
       setIsLoading(false);
     }
@@ -162,15 +173,17 @@ export const Sales: React.FC = () => {
                     <SelectValue placeholder="Select medicine" />
                   </SelectTrigger>
                   <SelectContent>
-                    {medicines.map((medicine) => (
-                      <SelectItem 
-                        key={medicine.medicineId} 
-                        value={medicine.medicineId.toString()}
-                        disabled={medicine.quantity === 0}
-                      >
-                        {medicine.name} - ${medicine.sellingPrice} (Stock: {medicine.quantity})
-                      </SelectItem>
-                    ))}
+                    {medicines && medicines.length > 0 ? (
+                      medicines.map((medicine) => (
+                        <SelectItem 
+                          key={medicine.medicineId} 
+                          value={medicine.medicineId.toString()}
+                          disabled={medicine.quantity === 0}
+                        >
+                          {medicine.name} - ${medicine.sellingPrice} (Stock: {medicine.quantity})
+                        </SelectItem>
+                      ))
+                    ) : null}
                   </SelectContent>
                 </Select>
               </div>
@@ -278,16 +291,24 @@ export const Sales: React.FC = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sales.map((sale) => (
-                <TableRow key={sale.saleId}>
-                  <TableCell className="font-medium">{sale.medicineName}</TableCell>
-                  <TableCell>{sale.quantity}</TableCell>
-                  <TableCell>${sale.totalAmount.toFixed(2)}</TableCell>
-                  <TableCell>${sale.profit.toFixed(2)}</TableCell>
-                  <TableCell>{new Date(sale.saleDate).toLocaleDateString()}</TableCell>
-                  <TableCell>{sale.userName}</TableCell>
+              {sales && sales.length > 0 ? (
+                sales.map((sale) => (
+                  <TableRow key={sale.saleId}>
+                    <TableCell className="font-medium">{sale.medicineName}</TableCell>
+                    <TableCell>{sale.quantity}</TableCell>
+                    <TableCell>${sale.totalAmount.toFixed(2)}</TableCell>
+                    <TableCell>${sale.profit.toFixed(2)}</TableCell>
+                    <TableCell>{new Date(sale.saleDate).toLocaleDateString()}</TableCell>
+                    <TableCell>{sale.userName}</TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center text-muted-foreground">
+                    No sales found
+                  </TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </CardContent>
